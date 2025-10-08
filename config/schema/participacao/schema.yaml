@@ -1,0 +1,165 @@
+# filename: schema.yaml
+version: "1.0"
+description: >
+  Esquema lógico “longo” para participação eleitoral (1988–2025), níveis município e UF,
+  com chaves compostas por ano × turno × cargo_representante × localização. Inclui
+  constraints de integridade, enums e checks aritméticos. Sem dados; especificação apenas.
+
+enums:
+  turno:
+    type: int
+    values: [1, 2]
+  tipo_eleicao:
+    type: string
+    values: ["geral", "municipal"]
+  cargo_representante:
+    type: string
+    values: ["PR", "PREF"]
+  sg_uf:
+    type: string
+    values: ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"]
+  cd_cargo:
+    type: int
+    values: [1, 11]
+
+regex:
+  sha256: "^[0-9a-f]{64}$"
+  uuid_v4_or_any: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$|^.+$"
+  semver_data: "^data-v\\d+\\.\\d+\\.\\d+$"
+  date_iso: "^\\d{4}-\\d{2}-\\d{2}$"
+
+tables:
+  participacao_municipio_turno:
+    description: Observações por município × ano × turno × cargo representante (PR/PREF).
+    primary_key: [ano, turno, cargo_representante, sg_uf, id_municipio_tse]
+    columns:
+      ano:         {type: int64, nullable: false, check: "ano >= 1988 AND ano <= 2025"}
+      turno:       {type: int64, nullable: false, enum: turno}
+      tipo_eleicao:{type: string, nullable: false, enum: tipo_eleicao}
+      cargo_representante: {type: string, nullable: false, enum: cargo_representante}
+      cd_cargo:    {type: int64, nullable: false, enum: cd_cargo, references: "dim_cargo.cd_cargo"}
+      sg_uf:       {type: string, nullable: false, enum: sg_uf, references: "dim_uf.sg_uf"}
+      id_municipio_tse:  {type: int64, nullable: false, references: "dim_municipio.id_municipio_tse"}
+      id_municipio_ibge: {type: int64, nullable: true,  references: "dim_municipio.id_municipio_ibge"}
+      nome_municipio:    {type: string, nullable: true}
+      total_aptos:        {type: int64, nullable: false, check: "total_aptos >= 0"}
+      total_comparecimento:{type: int64, nullable: false, check: "total_comparecimento >= 0"}
+      total_abstencoes:   {type: int64, nullable: false, check: "total_abstencoes >= 0"}
+      votos_brancos:      {type: int64, nullable: false, check: "votos_brancos >= 0"}
+      votos_nulos:        {type: int64, nullable: false, check: "votos_nulos >= 0"}
+      votos_validos:      {type: int64, nullable: false, check: "votos_validos >= 0"}
+      total_votos:        {type: int64, nullable: false, check: "total_votos >= 0"}
+      taxa_comparecimento:{type: float64, nullable: true,  scale: 4, check: "taxa_comparecimento >= 0 AND taxa_comparecimento <= 1"}
+      taxa_abstencao:     {type: float64, nullable: true,  scale: 4, check: "taxa_abstencao >= 0 AND taxa_abstencao <= 1"}
+      prop_votos_brancos: {type: float64, nullable: true,  scale: 4, check: "prop_votos_brancos >= 0 AND prop_votos_brancos <= 1"}
+      prop_votos_nulos:   {type: float64, nullable: true,  scale: 4, check: "prop_votos_nulos >= 0 AND prop_votos_nulos <= 1"}
+      exterior_flag:      {type: bool,   nullable: false, default: false}
+      fonte:              {type: string, nullable: false}
+      versao_dados:       {type: string, nullable: false, format: semver_data}
+      data_extracao:      {type: date,   nullable: false, format: date_iso}
+      observacoes:        {type: string, nullable: true}
+      hash_fonte:         {type: string, nullable: true,  format: sha256}
+      hash_arquivo:       {type: string, nullable: true,  format: sha256}
+      pipeline_run_id:    {type: string, nullable: true,  format: uuid_v4_or_any}
+    checks:
+      - name: identidade_soma_municipio
+        expr: "total_aptos = total_comparecimento + total_abstencoes"
+      - name: identidade_total_votos
+        expr: "total_votos = total_comparecimento"
+      - name: identidade_validos
+        expr: "votos_validos = total_comparecimento - (votos_brancos + votos_nulos)"
+      - name: taxas_definidas_quando_denominador_positivo
+        expr: "(total_aptos = 0 AND taxa_comparecimento IS NULL AND taxa_abstencao IS NULL) OR (total_aptos > 0 AND taxa_comparecimento IS NOT NULL AND taxa_abstencao IS NOT NULL)"
+      - name: proporcoes_definidas_quando_total_votos_positivo
+        expr: "(total_votos = 0 AND prop_votos_brancos IS NULL AND prop_votos_nulos IS NULL) OR (total_votos > 0 AND prop_votos_brancos IS NOT NULL AND prop_votos_nulos IS NOT NULL)"
+    foreign_keys:
+      - {columns: [sg_uf], references: dim_uf.sg_uf}
+      - {columns: [sg_uf, id_municipio_tse], references: dim_municipio.(sg_uf,id_municipio_tse)}
+      - {columns: [cd_cargo], references: dim_cargo.cd_cargo}
+
+  participacao_uf_turno:
+    description: Observações por UF × ano × turno × cargo representante (PR/PREF).
+    primary_key: [ano, turno, cargo_representante, sg_uf]
+    columns:
+      ano:         {type: int64, nullable: false, check: "ano >= 1988 AND ano <= 2025"}
+      turno:       {type: int64, nullable: false, enum: turno}
+      tipo_eleicao:{type: string, nullable: false, enum: tipo_eleicao}
+      cargo_representante: {type: string, nullable: false, enum: cargo_representante}
+      cd_cargo:    {type: int64, nullable: false, enum: cd_cargo, references: "dim_cargo.cd_cargo"}
+      sg_uf:       {type: string, nullable: false, enum: sg_uf, references: "dim_uf.sg_uf"}
+      id_uf_ibge:  {type: int64, nullable: true,  references: "dim_uf.id_uf_ibge"}
+      total_aptos:        {type: int64, nullable: false, check: "total_aptos >= 0"}
+      total_comparecimento:{type: int64, nullable: false, check: "total_comparecimento >= 0"}
+      total_abstencoes:   {type: int64, nullable: false, check: "total_abstencoes >= 0"}
+      votos_brancos:      {type: int64, nullable: false, check: "votos_brancos >= 0"}
+      votos_nulos:        {type: int64, nullable: false, check: "votos_nulos >= 0"}
+      votos_validos:      {type: int64, nullable: false, check: "votos_validos >= 0"}
+      total_votos:        {type: int64, nullable: false, check: "total_votos >= 0"}
+      taxa_comparecimento:{type: float64, nullable: true,  scale: 4, check: "taxa_comparecimento >= 0 AND taxa_comparecimento <= 1"}
+      taxa_abstencao:     {type: float64, nullable: true,  scale: 4, check: "taxa_abstencao >= 0 AND taxa_abstencao <= 1"}
+      prop_votos_brancos: {type: float64, nullable: true,  scale: 4, check: "prop_votos_brancos >= 0 AND prop_votos_brancos <= 1"}
+      prop_votos_nulos:   {type: float64, nullable: true,  scale: 4, check: "prop_votos_nulos >= 0 AND prop_votos_nulos <= 1"}
+      exterior_flag:      {type: bool,   nullable: false, default: false}
+      fonte:              {type: string, nullable: false}
+      versao_dados:       {type: string, nullable: false, format: semver_data}
+      data_extracao:      {type: date,   nullable: false, format: date_iso}
+      observacoes:        {type: string, nullable: true}
+      hash_fonte:         {type: string, nullable: true,  format: sha256}
+      hash_arquivo:       {type: string, nullable: true,  format: sha256}
+      pipeline_run_id:    {type: string, nullable: true,  format: uuid_v4_or_any}
+    checks:
+      - name: identidade_soma_uf
+        expr: "total_aptos = total_comparecimento + total_abstencoes"
+      - name: identidade_total_votos
+        expr: "total_votos = total_comparecimento"
+      - name: identidade_validos
+        expr: "votos_validos = total_comparecimento - (votos_brancos + votos_nulos)"
+      - name: taxas_definidas_quando_denominador_positivo
+        expr: "(total_aptos = 0 AND taxa_comparecimento IS NULL AND taxa_abstencao IS NULL) OR (total_aptos > 0 AND taxa_comparecimento IS NOT NULL AND taxa_abstencao IS NOT NULL)"
+      - name: proporcoes_definidas_quando_total_votos_positivo
+        expr: "(total_votos = 0 AND prop_votos_brancos IS NULL AND prop_votos_nulos IS NULL) OR (total_votos > 0 AND prop_votos_brancos IS NOT NULL AND prop_votos_nulos IS NOT NULL)"
+
+  dim_municipio:
+    description: Dimensão de municípios com códigos TSE e IBGE e atributos de vigência.
+    primary_key: [sg_uf, id_municipio_tse]
+    uniques:
+      - [id_municipio_ibge]
+    columns:
+      sg_uf:               {type: string, nullable: false, enum: sg_uf, references: "dim_uf.sg_uf"}
+      id_municipio_tse:    {type: int64,  nullable: false}
+      id_municipio_ibge:   {type: int64,  nullable: false}
+      nome_municipio:      {type: string, nullable: false}
+      capital_flag:        {type: bool,   nullable: false}
+      vigencia_ini:        {type: date,   nullable: false, format: date_iso}
+      vigencia_fim:        {type: date,   nullable: true,  format: date_iso}
+    checks:
+      - name: vigencia_coerente
+        expr: "vigencia_fim IS NULL OR vigencia_fim >= vigencia_ini"
+
+  dim_uf:
+    description: Dimensão de Unidades da Federação com códigos IBGE.
+    primary_key: [sg_uf]
+    uniques:
+      - [id_uf_ibge]
+    columns:
+      sg_uf:    {type: string, nullable: false, enum: sg_uf}
+      id_uf_ibge: {type: int64, nullable: false, check: "id_uf_ibge >= 11 AND id_uf_ibge <= 53"}
+      nome_uf:  {type: string, nullable: false}
+
+  dim_cargo:
+    description: Dimensão de cargos representativos da participação.
+    primary_key: [cargo_representante]
+    uniques:
+      - [cd_cargo]
+    columns:
+      cargo_representante: {type: string, nullable: false, enum: cargo_representante}
+      cd_cargo:            {type: int64,  nullable: false, enum: cd_cargo}
+      ds_cargo:            {type: string, nullable: false, check: "ds_cargo IN ('Presidente','Prefeito')"}
+    checks:
+      - name: mapeamento_consistente
+        expr: "(cargo_representante = 'PR' AND cd_cargo = 1) OR (cargo_representante = 'PREF' AND cd_cargo = 11)"
+
+notes:
+  - "Nível municipal exclui 'ZZ' (Exterior); manter exterior_flag=false por padrão."
+  - "Taxas e proporções devem ser calculadas com 4 casas decimais; aceitar NULL quando denominador = 0."
+  - "Joins sempre por códigos (TSE/IBGE); nomes de municípios são informativos e podem variar."
