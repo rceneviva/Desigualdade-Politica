@@ -1,0 +1,73 @@
+# filename: codebook.csv
+tabela,var_name,label_pt,descricao,tipo,dominio_permitido,unidade_medida,derivacao,nulos_permitidos,intervalo_valido,chave,notas
+participacao_municipio_turno,ano,Ano,"Ano da eleição (calendário civil).",int64,"[1988,2025]",código,―,não,"[1988,2025]",pk,"Parte da chave primária."
+participacao_municipio_turno,turno,Turno,"Número do turno: 1 ou 2.",int64,"{1,2}",código,―,não,"{1,2}",pk,"Parte da chave primária."
+participacao_municipio_turno,tipo_eleicao,Tipo de eleição,"Tipo do pleito conforme calendário eleitoral: geral ou municipal.",string,"{geral,municipal}",texto,―,não,―,―,"Usado para rotulagem e validações contextuais."
+participacao_municipio_turno,cargo_representante,Cargo representante,"Cargo usado como representante da participação: PR (gerais) ou PREF (municipais).",string,"{PR,PREF}",código,―,não,"{PR,PREF}",pk,"Parte da chave primária; mapeia para cd_cargo."
+participacao_municipio_turno,cd_cargo,Código do cargo,"Código numérico do cargo representante: 1=Presidente, 11=Prefeito.",int64,"{1,11}",código,―,não,"{1,11}",fk→dim_cargo.cd_cargo,"Consistência 1:1 com cargo_representante."
+participacao_municipio_turno,sg_uf,UF,"Sigla da Unidade da Federação.",string,"{AC,AL,AP,AM,BA,CE,DF,ES,GO,MA,MG,MS,MT,PA,PB,PE,PI,PR,RJ,RN,RO,RR,RS,SC,SE,SP,TO}",código,―,não,―,pk,"Parte da chave primária; fk para dim_uf.sg_uf."
+participacao_municipio_turno,id_municipio_tse,Código TSE do município,"Identificador oficial do município no TSE (único por UF).",int64,"[0,+inf)",código,―,não,"[0,+inf)",pk,"Parte da chave primária; fk para dim_municipio."
+participacao_municipio_turno,id_municipio_ibge,Código IBGE do município,"Identificador de 7 dígitos do IBGE.",int64,"[0,+inf)",código,―,sim,"[0,+inf)",fk→dim_municipio.id_municipio_ibge,"Pode faltar em casos históricos raros; harmonizado via crosswalk."
+participacao_municipio_turno,nome_municipio,Nome do município,"Nome oficial do município no ano do pleito.",string,"qualquer string",texto,―,sim,―,―,"Varia ao longo do tempo; usar códigos para joins."
+participacao_municipio_turno,total_aptos,Eleitores aptos,"Total de eleitores aptos a votar no turno e cargo representativo.",int64,"[0,+inf)",contagem,―,não,"[0,+inf)",―,"Fonte primária TSE/ELO; denominador das taxas."
+participacao_municipio_turno,total_comparecimento,Comparecimento,"Total de eleitores que compareceram às urnas.",int64,"[0,+inf)",contagem,―,não,"[0,+inf)",―,"Igual ao total de votos apurados (todas as naturezas)."
+participacao_municipio_turno,total_abstencoes,Abstenções,"Total de eleitores aptos que não compareceram.",int64,"[0,+inf)",contagem,"total_aptos - total_comparecimento",não,"[0,+inf)",―,"Identidade: total_aptos = comparecimento + abstenções."
+participacao_municipio_turno,votos_brancos,Votos brancos,"Total de votos brancos no cargo representante.",int64,"[0,+inf)",contagem,―,não,"[0,+inf)",―,"Inclui apenas brancos do eleitor."
+participacao_municipio_turno,votos_nulos,Votos nulos,"Total de votos nulos no cargo representante.",int64,"[0,+inf)",contagem,―,não,"[0,+inf)",―,"Inclui apenas nulos do eleitor (não judiciais)."
+participacao_municipio_turno,votos_validos,Votos válidos,"Total de votos válidos no cargo representante.",int64,"[0,+inf)",contagem,"total_comparecimento - (votos_brancos + votos_nulos)",não,"[0,+inf)",―,"Para proporcionais, equivale a nominais+legenda (no cargo representativo não há legenda em PR/PREF)."
+participacao_municipio_turno,total_votos,Total de votos,"Total de votos apurados (todas as naturezas).",int64,"[0,+inf)",contagem,"= total_comparecimento",não,"[0,+inf)",―,"Identidade: total_votos = total_comparecimento."
+participacao_municipio_turno,taxa_comparecimento,Taxa de comparecimento,"Proporção de aptos que compareceram.",float64,"[0,1]",proporção,"total_comparecimento / total_aptos",sim,"[0,1]","check","Permitir nulo quando total_aptos=0; 4 casas decimais."
+participacao_municipio_turno,taxa_abstencao,Taxa de abstenção,"Proporção de aptos que não compareceram.",float64,"[0,1]",proporção,"total_abstencoes / total_aptos",sim,"[0,1]","check","Permitir nulo quando total_aptos=0; 4 casas decimais."
+participacao_municipio_turno,prop_votos_brancos,Proporção de brancos,"Proporção de votos brancos sobre total de votos.",float64,"[0,1]",proporção,"votos_brancos / total_votos",sim,"[0,1]","check","Permitir nulo quando total_votos=0; 4 casas decimais."
+participacao_municipio_turno,prop_votos_nulos,Proporção de nulos,"Proporção de votos nulos sobre total de votos.",float64,"[0,1]",proporção,"votos_nulos / total_votos",sim,"[0,1]","check","Permitir nulo quando total_votos=0; 4 casas decimais."
+participacao_municipio_turno,exterior_flag,Exterior?,"Indica observação relacionada a votação no exterior.",bool,"{true,false}",código,―,não,―,―,"Padrão false; 'ZZ' excluído do nível municipal."
+participacao_municipio_turno,fonte,Fonte,"Origem dos dados (ex.: TSE Dados Abertos; CEPESP para metadados).",string,"qualquer string",texto,―,não,―,―,"Registrar URL e organização provedora."
+participacao_municipio_turno,versao_dados,Versão dos dados,"Etiqueta semver dos dados consolidados.",string,"regex:^data-v\\d+\\.\\d+\\.\\d+$",texto,―,não,―,―,"Ex.: data-v1.0.0."
+participacao_municipio_turno,data_extracao,Data de extração,"Data ISO em que a fonte foi extraída.",date,"YYYY-MM-DD",texto,―,não,―,―,"Formato ISO 8601."
+participacao_municipio_turno,observacoes,Observações,"Notas livres sobre exceções ou particularidades.",string,"qualquer string",texto,―,sim,―,―,"Uso parcimonioso."
+participacao_municipio_turno,hash_fonte,SHA-256 da fonte,"Hash SHA-256 do arquivo bruto baixado da fonte.",string,"regex:^[0-9a-f]{64}$",código,―,sim,―,―,"Auditoria e reprodutibilidade."
+participacao_municipio_turno,hash_arquivo,SHA-256 do arquivo processado,"Hash SHA-256 do arquivo após normalização.",string,"regex:^[0-9a-f]{64}$",código,―,sim,―,―,"Auditoria de transformação."
+participacao_municipio_turno,pipeline_run_id,ID da execução,"Identificador da execução da pipeline (UUID v4 ou similar).",string,"regex:^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$|^.+$",código,―,sim,―,―,"UUID v4 recomendado; aceitar string se outra convenção."
+
+participacao_uf_turno,ano,Ano,"Ano da eleição (calendário civil).",int64,"[1988,2025]",código,―,não,"[1988,2025]",pk,"Parte da chave primária."
+participacao_uf_turno,turno,Turno,"Número do turno: 1 ou 2.",int64,"{1,2}",código,―,não,"{1,2}",pk,"Parte da chave primária."
+participacao_uf_turno,tipo_eleicao,Tipo de eleição,"Tipo do pleito conforme calendário eleitoral: geral ou municipal.",string,"{geral,municipal}",texto,―,não,―,―,"Rotulagem e validações."
+participacao_uf_turno,cargo_representante,Cargo representante,"Cargo usado como representante da participação: PR (gerais) ou PREF (municipais).",string,"{PR,PREF}",código,―,não,"{PR,PREF}",pk,"Parte da chave primária."
+participacao_uf_turno,cd_cargo,Código do cargo,"Código numérico do cargo representante: 1=Presidente, 11=Prefeito.",int64,"{1,11}",código,―,não,"{1,11}",fk→dim_cargo.cd_cargo,"Consistência 1:1 com cargo_representante."
+participacao_uf_turno,sg_uf,UF,"Sigla da Unidade da Federação.",string,"{AC,AL,AP,AM,BA,CE,DF,ES,GO,MA,MG,MS,MT,PA,PB,PE,PI,PR,RJ,RN,RO,RR,RS,SC,SE,SP,TO}",código,―,não,―,pk,"Parte da chave primária; fk para dim_uf.sg_uf."
+participacao_uf_turno,id_uf_ibge,Código IBGE da UF,"Código IBGE de 2 dígitos da UF.",int64,"[11,53]",código,―,sim,"[11,53]",fk→dim_uf.id_uf_ibge,"Opcional para junções com dados IBGE."
+participacao_uf_turno,total_aptos,Eleitores aptos,"Total de eleitores aptos na UF.",int64,"[0,+inf)",contagem,―,não,"[0,+inf)",―,―
+participacao_uf_turno,total_comparecimento,Comparecimento,"Total de eleitores que compareceram na UF.",int64,"[0,+inf)",contagem,―,não,"[0,+inf)",―,―
+participacao_uf_turno,total_abstencoes,Abstenções,"Total de eleitores aptos que não compareceram na UF.",int64,"[0,+inf)",contagem,"total_aptos - total_comparecimento",não,"[0,+inf)",―,―
+participacao_uf_turno,votos_brancos,Votos brancos,"Total de votos brancos no cargo representante (UF).",int64,"[0,+inf)",contagem,―,não,"[0,+inf)",―,―
+participacao_uf_turno,votos_nulos,Votos nulos,"Total de votos nulos no cargo representante (UF).",int64,"[0,+inf)",contagem,―,não,"[0,+inf)",―,―
+participacao_uf_turno,votos_validos,Votos válidos,"Total de votos válidos no cargo representante (UF).",int64,"[0,+inf)",contagem,"total_comparecimento - (votos_brancos + votos_nulos)",não,"[0,+inf)",―,―
+participacao_uf_turno,total_votos,Total de votos,"Total de votos apurados (todas as naturezas) na UF.",int64,"[0,+inf)",contagem,"= total_comparecimento",não,"[0,+inf)",―,―
+participacao_uf_turno,taxa_comparecimento,Taxa de comparecimento,"Proporção de aptos que compareceram na UF.",float64,"[0,1]",proporção,"total_comparecimento / total_aptos",sim,"[0,1]","check","Permitir nulo quando total_aptos=0; 4 casas decimais."
+participacao_uf_turno,taxa_abstencao,Taxa de abstenção,"Proporção de aptos que não compareceram na UF.",float64,"[0,1]",proporção,"total_abstencoes / total_aptos",sim,"[0,1]","check","Permitir nulo quando total_aptos=0; 4 casas decimais."
+participacao_uf_turno,prop_votos_brancos,Proporção de brancos,"Proporção de votos brancos sobre total de votos (UF).",float64,"[0,1]",proporção,"votos_brancos / total_votos",sim,"[0,1]","check","Permitir nulo quando total_votos=0; 4 casas decimais."
+participacao_uf_turno,prop_votos_nulos,Proporção de nulos,"Proporção de votos nulos sobre total de votos (UF).",float64,"[0,1]",proporção,"votos_nulos / total_votos",sim,"[0,1]","check","Permitir nulo quando total_votos=0; 4 casas decimais."
+participacao_uf_turno,exterior_flag,Exterior?,"Indica se a observação agrega votos no exterior (documental).",bool,"{true,false}",código,―,não,―,―,"Padrão false; 'ZZ' não pertence a nenhuma UF."
+participacao_uf_turno,fonte,Fonte,"Origem dos dados (ex.: TSE Dados Abertos; CEPESP para metadados).",string,"qualquer string",texto,―,não,―,―,"Registrar URL e organização provedora."
+participacao_uf_turno,versao_dados,Versão dos dados,"Etiqueta semver dos dados consolidados.",string,"regex:^data-v\\d+\\.\\d+\\.\\d+$",texto,―,não,―,―,"Ex.: data-v1.0.0."
+participacao_uf_turno,data_extracao,Data de extração,"Data ISO em que a fonte foi extraída.",date,"YYYY-MM-DD",texto,―,não,―,―,"Formato ISO 8601."
+participacao_uf_turno,observacoes,Observações,"Notas livres sobre exceções ou particularidades.",string,"qualquer string",texto,―,sim,―,―,"Uso parcimonioso."
+participacao_uf_turno,hash_fonte,SHA-256 da fonte,"Hash SHA-256 do arquivo bruto baixado da fonte.",string,"regex:^[0-9a-f]{64}$",código,―,sim,―,―,"Auditoria e reprodutibilidade."
+participacao_uf_turno,hash_arquivo,SHA-256 do arquivo processado,"Hash SHA-256 do arquivo após normalização.",string,"regex:^[0-9a-f]{64}$",código,―,sim,―,―,"Auditoria de transformação."
+participacao_uf_turno,pipeline_run_id,ID da execução,"Identificador da execução da pipeline (UUID v4 ou similar).",string,"regex:^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$|^.+$",código,―,sim,―,―,"UUID v4 recomendado; aceitar string se outra convenção."
+
+dim_municipio,sg_uf,UF,"Sigla da UF à qual o município pertence.",string,"{AC,AL,AP,AM,BA,CE,DF,ES,GO,MA,MG,MS,MT,PA,PB,PE,PI,PR,RJ,RN,RO,RR,RS,SC,SE,SP,TO}",código,―,não,―,pk,"Compor pk com id_municipio_tse; fk para dim_uf.sg_uf."
+dim_municipio,id_municipio_tse,Código TSE do município,"Identificador do TSE (único por UF).",int64,"[0,+inf)",código,―,não,"[0,+inf)",pk,"Compor pk com sg_uf."
+dim_municipio,id_municipio_ibge,Código IBGE do município,"Identificador IBGE de 7 dígitos.",int64,"[0,+inf)",código,―,não,"[0,+inf)",unique,"Chave alternativa única nacional."
+dim_municipio,nome_municipio,Nome do município,"Nome oficial; pode variar ao longo do tempo.",string,"qualquer string",texto,―,não,―,―,"Padronização textual opcional."
+dim_municipio,capital_flag,Capital?,"Indica se o município é capital de UF.",bool,"{true,false}",código,―,não,―,―,"Útil para análises desagregadas."
+dim_municipio,vigencia_ini,Vigência inicial,"Data inicial de vigência do registro.",date,"YYYY-MM-DD",texto,―,não,―,―,"Histórico territorial."
+dim_municipio,vigencia_fim,Vigência final,"Data final de vigência (ou nulo se vigente).",date,"YYYY-MM-DD|null",texto,―,sim,―,―,"Nulo indica registro em vigor."
+
+dim_uf,sg_uf,UF,"Sigla da Unidade da Federação.",string,"{AC,AL,AP,AM,BA,CE,DF,ES,GO,MA,MG,MS,MT,PA,PB,PE,PI,PR,RJ,RN,RO,RR,RS,SC,SE,SP,TO}",código,―,não,―,pk,"Chave primária."
+dim_uf,id_uf_ibge,Código IBGE da UF,"Identificador IBGE de 2 dígitos.",int64,"[11,53]",código,―,não,"[11,53]",unique,"Único nacional."
+dim_uf,nome_uf,Nome da UF,"Nome oficial da UF.",string,"qualquer string",texto,―,não,―,―,"Padronização textual opcional."
+
+dim_cargo,cargo_representante,Cargo representante,"Código textual do cargo representativo da participação.",string,"{PR,PREF}",código,―,não,"{PR,PREF}",pk,"Chave primária."
+dim_cargo,cd_cargo,Código do cargo,"Código numérico do cargo (1=Presidente, 11=Prefeito).",int64,"{1,11}",código,―,não,"{1,11}",unique,"Único; fk alvo das tabelas fato."
+dim_cargo,ds_cargo,Descrição do cargo,"Rótulo do cargo.",string,"{Presidente,Prefeito}",texto,―,não,―,―,"Domínio fechado."
