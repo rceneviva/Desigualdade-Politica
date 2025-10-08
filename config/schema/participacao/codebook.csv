@@ -1,4 +1,3 @@
-# filename: codebook.csv
 tabela,var_name,label_pt,descricao,tipo,dominio_permitido,unidade_medida,derivacao,nulos_permitidos,intervalo_valido,chave,notas
 participacao_municipio_turno,ano,Ano,"Ano da eleição (calendário civil).",int64,"[1988,2025]",código,―,não,"[1988,2025]",pk,"Parte da chave primária."
 participacao_municipio_turno,turno,Turno,"Número do turno: 1 ou 2.",int64,"{1,2}",código,―,não,"{1,2}",pk,"Parte da chave primária."
