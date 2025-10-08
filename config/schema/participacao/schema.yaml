@@ -1,4 +1,3 @@
-# filename: schema.yaml
 version: "1.0"
 description: >
   Esquema lógico “longo” para participação eleitoral (1988–2025), níveis município e UF,
