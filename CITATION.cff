@@ -1,0 +1,66 @@
+# filename: CITATION.cff
+cff-version: 1.2.0
+title: "Desigualdade Política no Brasil: participação eleitoral (1988–2025)"
+message: "Se você usar este repositório, por favor cite conforme abaixo."
+type: software
+abstract: >
+  Repositório de governança técnico-metodológica para organizar e versionar
+  dados de participação eleitoral no Brasil (1988–2025). Esta etapa define
+  arquitetura, padrões, licenças e protocolo de versionamento (semver duplo)
+  para código e dados, sem executar coleta ou processamento.
+authors:
+  - family-names: "CENEVIVA"
+    given-names: "RICARDO"
+    affiliation: "CECS-UFABC"
+    orcid: "https://orcid.org/0000-0001-5464-1119"
+    email: "ricardo.ceneviva@ufabc.edu.br"
+  # Adicione coautores conforme necessário.
+version: "0.1.0"
+date-released: "2025-10-07"
+license: Apache-2.0
+repository-code: "<URL_REPOSITORIO>"
+keywords:
+  - Brasil
+  - participação eleitoral
+  - desigualdade política
+  - TSE
+  - CEPESP
+preferred-citation:
+  type: generic
+  title: "Desigualdade Política no Brasil: participação eleitoral (1988–2025) — repositório de código e governança"
+  authors:
+    - family-names: "<SOBRENOME_AUTOR_1>"
+      given-names: "<NOME_AUTOR_1>"
+  year: 2025
+  url: "<URL_REPOSITORIO>"
+references:
+  - type: dataset
+    title: "Base consolidada de participação eleitoral no Brasil (1988–2025)"
+    authors:
+      - family-names: "<SOBRENOME_AUTOR_1>"
+        given-names: "<NOME_AUTOR_1>"
+    version: "0.1.0"
+    year: 2025
+    notes: "Dados derivados sob CC BY 4.0; metadados técnicos sob CC0 1.0."
+    url: "<URL_DATASET_PUBLICADO>"
+  - type: software
+    title: "Código-fonte para ingestão, harmonização e QA de participação eleitoral"
+    authors:
+      - family-names: "<SOBRENOME_AUTOR_1>"
+        given-names: "<NOME_AUTOR_1>"
+    version: "0.1.0"
+    year: 2025
+    url: "<URL_REPOSITORIO>"
+  - type: webpage
+    title: "Tribunal Superior Eleitoral — Portal de Dados Abertos"
+    url: "https://dados.tse.jus.br/"
+  - type: webpage
+    title: "CEPESP/FGV — CEPESPData"
+    url: "https://www.cepesp.io/"
+  - type: webpage
+    title: "Licença Creative Commons Attribution 4.0 International (CC BY 4.0)"
+    url: "https://creativecommons.org/licenses/by/4.0/"
+  - type: webpage
+    title: "Creative Commons Zero v1.0 Universal (CC0 1.0)"
+    url: "https://creativecommons.org/publicdomain/zero/1.0/"
+# Preencha os placeholders (<...>) após aprovação dos metadados.
